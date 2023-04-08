@@ -1,5 +1,6 @@
 /* eslint-disable quotes */
 const items = [];
+const workItems = [];
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -16,17 +17,23 @@ const day = today.toLocaleDateString("en-US", { weekday: "long", month: "long", 
 
 // route to home page (get request)
 app.get("/", (req, res) => {
-  res.render("list", { kindOfDay: day, itemList: items });
-  console.log(items);
+  res.render("list", { listName: day, itemList: items });
+});
+app.get("/work", (req, res) => {
+  res.render("list", { listName: "Work", itemList: workItems });
 });
 
 // route to home page (post request)
 app.post("/", (req, res) => {
   // get the value of the input field
   const item = req.body.newItem;
-  console.log(item);
-  items.push(item);
-  res.redirect("/");
+  if (req.body.listType === "Work") {
+    workItems.push(item);
+    res.redirect("/work");
+  } else {
+    items.push(item);
+    res.redirect("/");
+  }
 });
 
 // listen to port 3000
