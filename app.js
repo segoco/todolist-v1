@@ -1,5 +1,5 @@
 /* eslint-disable quotes */
-let items = [];
+const items = [];
 
 const express = require("express");
 const bodyParser = require("body-parser");
