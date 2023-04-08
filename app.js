@@ -8,27 +8,14 @@ const app = express();
 app.set("view engine", "ejs");
 
 const today = new Date();
-today.setDate(today.getDate() + 2);
-const currentDay = today.getDay();
-const specificDay = today.toLocaleDateString("en-US", { weekday: "long" });
+const day = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
 // route to home page
 app.get("/", (req, res) => {
-  let day = "";
-
-  if (currentDay === 6 || currentDay === 0) {
-    day = "Weekend";
-    res.render("list", { kindOfDay: day });
-  } else {
-    day = "Weekday";
-    res.render("list", { kindOfDay: day });
-  }
+  res.render("list", { kindOfDay: day });
 });
 
-app.get("/specificDay", (req, res) => {
-  res.render("list", { kindOfDay: specificDay });
-});
-
+// listen to port 3000
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
 });
