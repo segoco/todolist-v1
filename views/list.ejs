@@ -7,10 +7,16 @@
   </head>
   <body style="background-color: cornsilk">
     <h1><%= kindOfDay %></h1>
+    <br />
+    <h2>What do you need to do today?</h2>
     <ul>
-      <li>Buy food</li>
-      <li>Make food</li>
-      <li>Eat food</li>
+      <% itemList.forEach(function(item) { %>
+      <li><%= item %></li>
+      <% }); %>
     </ul>
+    <form action="/" method="post">
+      <input type="text" name="newItem" placeholder="new item" />
+      <button type="submit" name="button">Add Item</button>
+    </form>
   </body>
 </html>
