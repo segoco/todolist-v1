@@ -4,19 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>To-Do List</title>
+    <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body style="background-color: cornsilk">
-    <h1><%= kindOfDay %></h1>
-    <br />
-    <h2>What do you need to do today?</h2>
-    <ul>
-      <% itemList.forEach(function(item) { %>
-      <li><%= item %></li>
-      <% }); %>
-    </ul>
-    <form action="/" method="post">
-      <input type="text" name="newItem" placeholder="new item" />
-      <button type="submit" name="button">Add Item</button>
-    </form>
+  <body>
+    <div class="box" id="heading">
+      <h1><%= kindOfDay %></h1>
+      <h2>What do you need to do today?</h2>
+    </div>
+    <div class="box">
+      <ul>
+        <% itemList.forEach(function(item) { %>
+        <div class="item">
+          <input type="checkbox" />
+          <p><%= item %></p>
+        </div>
+        <% }); %>
+      </ul>
+      <form class="item" action="/" method="post">
+        <input type="text" name="newItem" placeholder="New item" autocomplete="off"/>
+        <button type="submit" name="button">+</button>
+      </form>
+    </div>
+    
   </body>
 </html>

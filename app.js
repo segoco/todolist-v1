@@ -9,6 +9,7 @@ const app = express();
 // tell app to use ejs as the view engine
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
 const today = new Date();
 const day = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
