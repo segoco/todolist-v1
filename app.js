@@ -10,6 +10,7 @@ const day = date.getDate();
 const app = express();
 let queryResult;
 let mongoose;
+let Item;
 
 // tell app to use ejs as the view engine
 app.set('view engine', 'ejs');
@@ -20,7 +21,7 @@ app.use(express.static('public'));
 async function initialDBConfig() {
   try {
     mongoose = require('./db');
-    const Item = require('./model');
+    Item = require('./model');
     const item1 = new Item({
       Name: 'Welcome to your todolist!',
     });
@@ -33,7 +34,7 @@ async function initialDBConfig() {
 
     const defaultItems = [item1, item2, item3];
 
-    queryResult = await Item.find();
+    queryResult = await Item.find().finally(() => mongoose.connection.close());
     console.log(`se encontraron: ${queryResult.length} items`);
     if (queryResult.length === 0) {
       Item.insertMany(defaultItems)
@@ -44,7 +45,6 @@ async function initialDBConfig() {
           console.log(err);
         });
     }
-    mongoose.connection.close();
   } catch (error) {
     console.log(error);
   }
@@ -53,9 +53,29 @@ async function initialDBConfig() {
 initialDBConfig().catch((err) => console.log(err));
 
 async function findItemsDB() {
-  items = await Item.find().lean();
-  return items.map((item) => item.Name);
+  let itemsFound = [];
+  mongoose = require('./db');
+  Item = require('./model');
+  try {
+    itemsFound = await Item.find().lean().finally(() => mongoose.connection.close());
+    itemsFound = itemsFound.map((item) => item.Name);
+  } catch (error) {
+    console.log(error);
+  }
+  console.log('los items son (en el findItemsDB)' + itemsFound);
+  return itemsFound;
 }
+
+// route to home page (get request)
+app.get('/', async (req, res) => {
+  try {
+    items = await findItemsDB();
+    console.log('los items son (en el get)' + items);
+    //res.render('list', { listName: day, itemList: items });
+  } catch (error) {
+    console.log(error);
+  }
+});
 
 async function insertItemDB(item) {
   // const newItem = new Item({
@@ -63,19 +83,6 @@ async function insertItemDB(item) {
   // });
   // await newItem.save();
 }
-
-// route to home page (get request)
-app.get('/', async (req, res) => {
-  // try {
-  //   const mongoose = require('./db');
-  //   items = await findItemsDB();
-  //   console.log(items);
-  //   res.render('list', { listName: day, itemList: items });
-  // } catch (error) {
-  //   console.log(error);
-  // }
-});
-
 app.get('/work', (req, res) => {
   res.render('list', { listName: 'Work', itemList: workItems });
 });
