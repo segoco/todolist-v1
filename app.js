@@ -4,13 +4,15 @@ const workItems = [];
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const moongoose = require('./db');
+const Item = require('./model/item');
+const List = require('./model/list');
 
 const date = require(__dirname + '/date.js');
 const day = date.getDate();
 const app = express();
+let defaultItems = [];
 let queryResult;
-let mongoose;
-let Item;
 
 // tell app to use ejs as the view engine
 app.set('view engine', 'ejs');
@@ -20,8 +22,6 @@ app.use(express.static('public'));
 // Initial DB Config
 async function initialDBConfig() {
   try {
-    mongoose = require('./db');
-    Item = require('./model');
     const item1 = new Item({
       Name: 'Welcome to your todolist!',
     });
@@ -32,9 +32,9 @@ async function initialDBConfig() {
       Name: '<-- Hit this to delete an item.',
     });
 
-    const defaultItems = [item1, item2, item3];
+    defaultItems = [item1, item2, item3];
 
-    queryResult = await Item.find().finally(() => mongoose.connection.close());
+    queryResult = await Item.find();
     console.log(`se encontraron: ${queryResult.length} items`);
     if (queryResult.length === 0) {
       Item.insertMany(defaultItems)
@@ -54,15 +54,11 @@ initialDBConfig().catch((err) => console.log(err));
 
 async function findItemsDB() {
   let itemsFound = [];
-  mongoose = require('./db');
-  Item = require('./model');
   try {
-    itemsFound = await Item.find().lean().finally(() => mongoose.connection.close());
-    itemsFound = itemsFound.map((item) => item.Name);
+    itemsFound = await Item.find();
   } catch (error) {
     console.log(error);
   }
-  console.log('los items son (en el findItemsDB)' + itemsFound);
   return itemsFound;
 }
 
@@ -70,19 +66,30 @@ async function findItemsDB() {
 app.get('/', async (req, res) => {
   try {
     items = await findItemsDB();
-    console.log('los items son (en el get)' + items);
-    //res.render('list', { listName: day, itemList: items });
+    res.render('list', { listName: day, itemList: items });
   } catch (error) {
     console.log(error);
   }
 });
 
-async function insertItemDB(item) {
-  // const newItem = new Item({
-  //   Name: item,
-  // });
-  // await newItem.save();
-}
+app.get('/:listName', async (req, res) => {
+  await List.findOne({ Name: req.params.listName }).then((result) => {
+    if (!result) {
+      console.log('No existe la lista');
+      const list = new List({
+        Name: req.params.listName,
+        Items: defaultItems,
+      });
+      list.save().finally(() => {
+        res.redirect(`/${req.params.listName}`);
+      });
+    } else {
+      console.log('Existe la lista');
+      res.render('list', { listName: result.Name, itemList: result.Items });
+    }
+  });
+});
+
 app.get('/work', (req, res) => {
   res.render('list', { listName: 'Work', itemList: workItems });
 });
@@ -90,17 +97,38 @@ app.get('/about', (req, res) => {
   res.render('about');
 });
 
+async function insertItemDB(item) {
+  try {
+    const newItem = new Item({
+      Name: item,
+    });
+    await newItem.save();
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 // route to home page (post request)
-app.post('/', (req, res) => {
-  // get the value of the input field
-  // const item = req.body.newItem;
-  // if (req.body.listType === 'Work') {
-  //   workItems.push(item);
-  //   res.redirect('/work');
-  // } else {
-  //   insertItemDB(item);
-  //   res.redirect('/');
-  // }
+app.post('/', async (req, res) => {
+  try {
+    const newItem = req.body.newItem;
+    await insertItemDB(newItem).finally(() => {
+      res.redirect('/');
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.post('/delete', async (req, res) => {
+  try {
+    const idItemToDelete = req.body.checkbox;
+    await Item.findByIdAndRemove(idItemToDelete).finally(() => {
+      res.redirect('/');
+    });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // listen to port 3000
