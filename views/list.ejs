@@ -2,6 +2,7 @@
     <div class="box" id="heading">
       <h1><%= listName %></h1>
       <h2>What do you need to do today?</h2>
+      <h3><%= day %></h3>
     </div>
     <div class="box">
       <ul>
@@ -9,6 +10,7 @@
         <form action="/delete" method="post">
           <div class="item">
           <input name="checkbox" value=<%= item._id %>  type="checkbox" onChange="this.form.submit()"/>
+          <input type="hidden" name="listName" value="<%= listName  %>"/>
           <p><%= item.Name %></p>
           </div>
         </form>
@@ -16,7 +18,7 @@
       </ul>
       <form class="item" action="/" method="post">
         <input type="text" name="newItem" placeholder="New item" autocomplete="off" />
-        <button type="submit" name="listType" value="<%= listName  %>">+</button>
+        <button type="submit" name="listName" value="<%= listName  %>">+</button>
       </form>
     </div>
 <%- include('footer') %>

@@ -4,7 +4,9 @@ const workItems = [];
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const favicon = require('serve-favicon');
 const moongoose = require('./db');
+const _ = require('lodash');
 const Item = require('./model/item');
 const List = require('./model/list');
 
@@ -14,12 +16,11 @@ const app = express();
 let defaultItems = [];
 let queryResult;
 
-// tell app to use ejs as the view engine
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use(favicon(`${__dirname}/public/images/favicon.ico`));
 
-// Initial DB Config
 async function initialDBConfig() {
   try {
     const item1 = new Item({
@@ -29,22 +30,21 @@ async function initialDBConfig() {
       Name: 'Hit the + button to add a new item.',
     });
     const item3 = new Item({
-      Name: '<-- Hit this to delete an item.',
+      Name: '<-- Hit this check to delete an item.',
     });
 
     defaultItems = [item1, item2, item3];
 
-    queryResult = await Item.find();
-    console.log(`se encontraron: ${queryResult.length} items`);
-    if (queryResult.length === 0) {
-      Item.insertMany(defaultItems)
-        .then(() => {
-          console.log('successfuly saved');
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
+    // queryResult = await Item.find();
+    // if (queryResult.length === 0) {
+    //   Item.insertMany(defaultItems)
+    //     .then(() => {
+    //       console.log('successfuly saved');
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //     });
+    // }
   } catch (error) {
     console.log(error);
   }
@@ -62,17 +62,14 @@ async function findItemsDB() {
   return itemsFound;
 }
 
-// route to home page (get request)
-app.get('/', async (req, res) => {
-  try {
-    items = await findItemsDB();
-    res.render('list', { listName: day, itemList: items });
-  } catch (error) {
-    console.log(error);
-  }
+app.get('/', (req, res) => {
+  res.redirect('/Today');
 });
 
 app.get('/:listName', async (req, res) => {
+  console.log('entro a listName');
+  console.log('listName (get/listname): ', req.params.listName);
+
   await List.findOne({ Name: req.params.listName }).then((result) => {
     if (!result) {
       console.log('No existe la lista');
@@ -81,20 +78,18 @@ app.get('/:listName', async (req, res) => {
         Items: defaultItems,
       });
       list.save().finally(() => {
+        console.log('Guardada listName: ', req.params.listName);
+        console.log('variable xyz: ', `/${req.params.listName}`);
         res.redirect(`/${req.params.listName}`);
       });
+    } else if (_.lowerCase(result.Name) === 'about') {
+      res.render('About');
     } else {
       console.log('Existe la lista');
-      res.render('list', { listName: result.Name, itemList: result.Items });
+      console.log('result.Name: ', result.Name);
+      res.render('list', { listName: req.params.listName, itemList: result.Items, day });
     }
   });
-});
-
-app.get('/work', (req, res) => {
-  res.render('list', { listName: 'Work', itemList: workItems });
-});
-app.get('/about', (req, res) => {
-  res.render('about');
 });
 
 async function insertItemDB(item) {
@@ -108,13 +103,26 @@ async function insertItemDB(item) {
   }
 }
 
-// route to home page (post request)
 app.post('/', async (req, res) => {
   try {
-    const newItem = req.body.newItem;
-    await insertItemDB(newItem).finally(() => {
-      res.redirect('/');
-    });
+    const { newItem } = req.body;
+    const { listName } = req.body;
+    console.log('listName: ', listName);
+    console.log('newItem: ', newItem);
+    if (listName === day) {
+      console.log('entro a home');
+      await insertItemDB(newItem).finally(() => {
+        res.redirect('/');
+      });
+    } else {
+      console.log('entro a otra lista');
+      const listFound = await List.findOne({ Name: listName });
+      console.log('list: ', listFound.Items);
+      listFound.Items.push({ Name: newItem });
+      listFound.save().finally(() => {
+        res.redirect(`/${listName}`);
+      });
+    }
   } catch (error) {
     console.log(error);
   }
@@ -122,10 +130,22 @@ app.post('/', async (req, res) => {
 
 app.post('/delete', async (req, res) => {
   try {
+    const { listName } = req.body;
     const idItemToDelete = req.body.checkbox;
-    await Item.findByIdAndRemove(idItemToDelete).finally(() => {
-      res.redirect('/');
-    });
+    console.log('listName: ', listName);
+    if (listName === day) {
+      console.log('entro a home');
+      await Item.findByIdAndRemove(idItemToDelete).finally(() => {
+        res.redirect('/');
+      });
+    } else {
+      console.log('entro a otra lista');
+      const ListFound = await List.findOne({ Name: listName });
+      ListFound.Items.pull(idItemToDelete);
+      ListFound.save().finally(() => {
+        res.redirect(`/${listName}`);
+      });
+    }
   } catch (error) {
     console.log(error);
   }
