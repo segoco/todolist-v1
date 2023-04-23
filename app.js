@@ -1,7 +1,4 @@
 /* eslint-disable quotes */
-let items = [];
-const workItems = [];
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const favicon = require('serve-favicon');
@@ -14,7 +11,6 @@ const date = require(__dirname + '/date.js');
 const day = date.getDate();
 const app = express();
 let defaultItems = [];
-let queryResult;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -34,33 +30,12 @@ async function initialDBConfig() {
     });
 
     defaultItems = [item1, item2, item3];
-
-    // queryResult = await Item.find();
-    // if (queryResult.length === 0) {
-    //   Item.insertMany(defaultItems)
-    //     .then(() => {
-    //       console.log('successfuly saved');
-    //     })
-    //     .catch((err) => {
-    //       console.log(err);
-    //     });
-    // }
   } catch (error) {
     console.log(error);
   }
 }
 
 initialDBConfig().catch((err) => console.log(err));
-
-async function findItemsDB() {
-  let itemsFound = [];
-  try {
-    itemsFound = await Item.find();
-  } catch (error) {
-    console.log(error);
-  }
-  return itemsFound;
-}
 
 app.get('/', (req, res) => {
   res.redirect('/Today');
