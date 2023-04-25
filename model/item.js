@@ -1,4 +1,4 @@
-const mongoose = require('../db');
+const mongoose = require('mongoose');
 // make the schema
 const itemsSchema = {
   Name: String,

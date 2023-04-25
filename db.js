@@ -2,30 +2,27 @@ const mongoose = require('mongoose');
 
 const dbURI = 'mongodb://127.0.0.1:27017/todolistDB';
 
-const options = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+const connect = () => {
+  mongoose
+    .connect(dbURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+    .finally(() => {
+      console.log('Connected to MongoDB');
+    })
+    .catch((err) => {
+      console.log('Error connecting to MongoDB', err);
+    });
 };
 
-mongoose.connect(dbURI, options);
-
-mongoose.connection.on('connected', () => {
-  console.log(`Mongoose default connection is open to ${dbURI}`);
-});
-
-mongoose.connection.on('error', (err) => {
-  console.log(`Mongoose default connection error: ${err}`);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('Mongoose default connection disconnected');
-});
-
-process.on('SIGINT', () => {
-  mongoose.connection.close(() => {
-    console.log('Mongoose default connection disconnected through app termination');
-    process.exit(0);
+const disconnect = () => {
+  mongoose.disconnect().finally(() => {
+    console.log('Disconnected from MongoDB');
   });
-});
+};
 
-module.exports = mongoose;
+module.exports = {
+  connect,
+  disconnect,
+};

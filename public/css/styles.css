@@ -130,3 +130,26 @@ html {
     color: #0E8388;
   }
   
+.h1about {
+  text-align: center;
+  color: #0E8388;
+  font-size: 50px;
+  font-weight: bold;
+  font-family: 'helvetica neue';
+}
+
+.h2about {
+  text-align: center;
+  color: #0E8388;
+  font-size: 30px;
+  font-weight: bold;
+  font-family: 'helvetica neue';
+}
+
+.pabout {
+  text-align: center;
+  color: #00204a;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'helvetica neue';
+}
