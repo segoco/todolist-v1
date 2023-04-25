@@ -34,11 +34,11 @@ async function initialListConfig() {
 
     defaultItems = [item1, item2, item3];
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 
-initialListConfig().catch((err) => console.log(err));
+initialListConfig().catch((err) => console.error(err));
 
 app.get('/', (req, res) => {
   res.redirect('/Today');
@@ -77,12 +77,12 @@ app.post('/', async (req, res) => {
             res.redirect(`/${listName}`);
           })
           .catch((err) => {
-            console.log(err);
+            console.error(err);
           });
       }
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 });
 
@@ -95,19 +95,19 @@ app.post('/delete', async (req, res) => {
         res.redirect(`/${listName}`);
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
       });
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 });
 
 app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+  console.info('Server is running on port 3000');
 });
 
 process.on('SIGINT', () => {
   db.disconnect();
-  console.log('La conexión a la base de datos se ha cerrado.');
+  console.error('La conexión a la base de datos se ha cerrado.');
   process.exit();
 });
