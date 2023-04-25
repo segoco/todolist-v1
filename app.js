@@ -45,59 +45,53 @@ app.get('/:listName', async (req, res) => {
   console.log('entro a listName');
   console.log('listName (get/listname): ', req.params.listName);
 
-  await List.findOne({ Name: req.params.listName }).then((result) => {
+  await List.findOne({ Name: _.upperCase(req.params.listName) }).then((result) => {
     if (!result) {
       console.log('No existe la lista');
       const list = new List({
-        Name: req.params.listName,
+        Name: _.upperCase(req.params.listName),
         Items: defaultItems,
       });
       list.save().finally(() => {
         console.log('Guardada listName: ', req.params.listName);
         console.log('variable xyz: ', `/${req.params.listName}`);
-        res.redirect(`/${req.params.listName}`);
+        res.redirect(`/${_.capitalize(req.params.listName)}`);
       });
     } else if (_.lowerCase(result.Name) === 'about') {
       res.render('About');
     } else {
       console.log('Existe la lista');
       console.log('result.Name: ', result.Name);
-      res.render('list', { listName: req.params.listName, itemList: result.Items, day });
+      res.render('list', { listName: _.upperCase(req.params.listName), itemList: result.Items, day });
     }
   });
 });
 
-async function insertItemDB(item) {
-  try {
-    const newItem = new Item({
-      Name: item,
-    });
-    await newItem.save();
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 app.post('/', async (req, res) => {
   try {
+    console.log('entro a post');
     const { newItem } = req.body;
-    const { listName } = req.body;
+    const listName = _.upperCase(req.body.listName);
     console.log('listName: ', listName);
     console.log('newItem: ', newItem);
-    if (listName === day) {
-      console.log('entro a home');
-      await insertItemDB(newItem).finally(() => {
-        res.redirect('/');
-      });
-    } else {
-      console.log('entro a otra lista');
-      const listFound = await List.findOne({ Name: listName });
-      console.log('list: ', listFound.Items);
-      listFound.Items.push({ Name: newItem });
-      listFound.save().finally(() => {
-        res.redirect(`/${listName}`);
-      });
-    }
+    await List.findOne({ Name: listName }).then((result) => {
+      if (result) {
+        console.log('Existe la lista');
+        console.log('result.Name: ', result.Name);
+        console.log('result.Items: ', result.Items);
+        result.Items.push({ Name: newItem });
+        result
+          .save()
+          .finally(() => {
+            res.redirect(`/${_.capitalize(listName)}`);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        console.log('No existe la lista');
+      }
+    });
   } catch (error) {
     console.log(error);
   }
@@ -108,19 +102,15 @@ app.post('/delete', async (req, res) => {
     const { listName } = req.body;
     const idItemToDelete = req.body.checkbox;
     console.log('listName: ', listName);
-    if (listName === day) {
-      console.log('entro a home');
-      await Item.findByIdAndRemove(idItemToDelete).finally(() => {
-        res.redirect('/');
+    console.log('idItemToDelete: ', idItemToDelete);
+    await List.findOneAndUpdate({ Name: listName }, { $pull: { Items: { _id: idItemToDelete } } })
+      .finally(() => {
+        console.log('borro el item');
+        res.redirect(`/${_.capitalize(listName)}`);
+      })
+      .catch((err) => {
+        console.log(err);
       });
-    } else {
-      console.log('entro a otra lista');
-      const ListFound = await List.findOne({ Name: listName });
-      ListFound.Items.pull(idItemToDelete);
-      ListFound.save().finally(() => {
-        res.redirect(`/${listName}`);
-      });
-    }
   } catch (error) {
     console.log(error);
   }
